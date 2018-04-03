@@ -12,8 +12,7 @@ __email__ = "cherepanov92@gmail.com"
  4. Подсчтиываем почтовые адреса и статусы
  5. Генерируем и возвращаем CSV
 '''
-import re
-import time
+import re, time
 
 class SearchMessageInLog:
     reg_message_id = r'([0-9A-Z]{11})'
@@ -25,18 +24,19 @@ class SearchMessageInLog:
             for line in f:
                 message_id = re.search(self.reg_message_id, line)
                 if message_id:
-                    self.message_array(line.rstrip(), message_id.group())
+                    self.find_message_in_array([message_id.group(), line.rstrip()])
 
-    def message_array(self, message, message_id):
+    def find_message_in_array(self, message_obj):
+        id, log_record = message_obj
+        rec = 0
+
         for message_record in self.message_list:
-            if message_record[0] == message_id:
-                print('Повтор')
-                message_record.append(message)
-                break
-            else:
-                continue
+            if message_record[0] == id:
+                message_record.append(log_record)
+                rec = 1
 
-        self.message_list.append(list([message_id, message]))
+        if not rec:
+            self.message_list.append(list([id, log_record]))
 
 if __name__ == '__main__':
     i = SearchMessageInLog()
