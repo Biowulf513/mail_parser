@@ -6,7 +6,7 @@ __email__ = "cherepanov92@gmail.com"
 +1. Построчно читаем файл
 +2. Если в строке есть id сообщения - 11 символов (числа и буквы в верхнем регистре) собираем их в словарь
 +3. Как только в словарь попадает строка со статусом 'removed' передаём словарь в обработку
-     1. Выясняем статус отправки
++    1. Выясняем статус отправки
      2. Обрабатываем список в зависимости от статуса
      3. Сохраняем адрес отправителя и статус отправки
  4. Подсчтиываем почтовые адреса и статусы
@@ -37,7 +37,22 @@ class SearchMessageInLog:
             self.all_messages.update({id:[log_record]})
 
     def message_analise(self, message_id):
-        pass
+        reg_email = '(\S+\@\S+)'
+        reg_sender = r'from=<{email}>'.format(email=reg_email)
+        reg_recipient = r'to=<{email}>'.format(email=reg_email)
+        reg_status = r'status=(\w+)'
+
+        sender = None
+        status = None
+
+        message_dict = self.all_messages.pop(message_id)
+        for action in message_dict:
+            message_sender = re.findall(reg_sender, action)
+            if message_sender:
+                sender = message_sender[0]
+            message_status = re.findall(reg_status, action)
+            if message_status:
+                status = message_status[0]
 
 if __name__ == '__main__':
     i = SearchMessageInLog()
