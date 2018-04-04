@@ -8,7 +8,7 @@ __email__ = "cherepanov92@gmail.com"
 +3. Как только в словарь попадает строка со статусом 'removed' передаём словарь в обработку
 +    1. Выясняем статус отправки
 +    2. Сохраняем адрес отправителя и статус отправки
- 4. Подсчтиываем почтовые адреса и статусы
++4. Подсчтиываем почтовые адреса и статусы
  5. Генерируем и возвращаем CSV
 '''
 import re
@@ -43,7 +43,7 @@ class SearchMessageInLog:
 
         status_dict = {'sent':'access', 'expired':'denied', 'bounced':'denied', 'deferred':'denied'}
 
-        sender = None
+        sender = 'system'
         status = None
 
         message_dict = self.all_messages.pop(message_id)
@@ -59,6 +59,35 @@ class SearchMessageInLog:
 
         self.messages_status[status].append(sender)
 
+    def sum_sender_messages(self):
+        sum_sender = {}
+        for sender in self.messages_status['access']:
+            if sender not in sum_sender:
+                sum_sender.update({sender:{'access':0}})
+            elif 'access' not in sum_sender[sender]:
+                sum_sender[sender].update({'access':0})
+
+            sum_sender[sender]['access'] += 1
+
+        for sender in self.messages_status['denied']:
+            if sender not in sum_sender:
+                sum_sender.update({sender:{'denied':0}})
+            elif 'denied' not in sum_sender[sender]:
+                sum_sender[sender].update({'denied': 0})
+
+            sum_sender[sender]['denied'] += 1
+
+        for sender in sum_sender:
+            sender_dict = sum_sender[sender]
+            if len(sender_dict) < 2:
+                if 'denied' not in sender_dict:
+                    sender_dict.update({'denied':0})
+                elif 'access' not in sender_dict:
+                    sender_dict.update({'access':0})
+
+        print(sum_sender)
 if __name__ == '__main__':
     i = SearchMessageInLog()
     i.file_reader('maillog')
+    i.sum_sender_messages()
+
