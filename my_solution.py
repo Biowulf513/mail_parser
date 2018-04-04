@@ -7,8 +7,7 @@ __email__ = "cherepanov92@gmail.com"
 +2. Если в строке есть id сообщения - 11 символов (числа и буквы в верхнем регистре) собираем их в словарь
 +3. Как только в словарь попадает строка со статусом 'removed' передаём словарь в обработку
 +    1. Выясняем статус отправки
-     2. Обрабатываем список в зависимости от статуса
-     3. Сохраняем адрес отправителя и статус отправки
++    2. Сохраняем адрес отправителя и статус отправки
  4. Подсчтиываем почтовые адреса и статусы
  5. Генерируем и возвращаем CSV
 '''
@@ -17,7 +16,7 @@ import re
 class SearchMessageInLog:
     reg_message_id = r'([0-9A-Z]{11})'
     all_messages = {}
-    counter = 0
+    messages_status = {'access':[],'denied':[]}
 
     def file_reader(self, file_name):
         with open(file_name, mode='r') as f:
@@ -42,17 +41,23 @@ class SearchMessageInLog:
         reg_recipient = r'to=<{email}>'.format(email=reg_email)
         reg_status = r'status=(\w+)'
 
+        status_dict = {'sent':'access', 'expired':'denied', 'bounced':'denied', 'deferred':'denied'}
+
         sender = None
         status = None
 
         message_dict = self.all_messages.pop(message_id)
         for action in message_dict:
+
             message_sender = re.findall(reg_sender, action)
             if message_sender:
                 sender = message_sender[0]
+
             message_status = re.findall(reg_status, action)
-            if message_status:
-                status = message_status[0]
+            if message_status and message_status[0] in status_dict:
+                status = status_dict[message_status[0]]
+
+        self.messages_status[status].append(sender)
 
 if __name__ == '__main__':
     i = SearchMessageInLog()
