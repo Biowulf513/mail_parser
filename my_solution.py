@@ -9,9 +9,9 @@ __email__ = "cherepanov92@gmail.com"
 +    1. Выясняем статус отправки
 +    2. Сохраняем адрес отправителя и статус отправки
 +4. Подсчтиываем почтовые адреса и статусы
- 5. Генерируем и возвращаем CSV
++5. Генерируем и возвращаем CSV
 '''
-import re
+import re, csv
 
 class SearchMessageInLog:
     reg_message_id = r'([0-9A-Z]{11})'
@@ -85,9 +85,23 @@ class SearchMessageInLog:
                 elif 'access' not in sender_dict:
                     sender_dict.update({'access':0})
 
-        print(sum_sender)
+        return sum_sender
+
+    def export_sender_stat_in_CSV(self, sender_statistics=None):
+        filename = 'statistics.csv'
+
+        with open(filename, 'w', newline='') as file:
+            writer = csv.writer(file)
+            header = ['sender_email', 'access', 'denied']
+            writer.writerow(header)
+
+            for item in sender_statistics:
+                writer.writerow((item,
+                                 sender_statistics[item]['access'],
+                                 sender_statistics[item]['denied']))
+
 if __name__ == '__main__':
     i = SearchMessageInLog()
     i.file_reader('maillog')
-    i.sum_sender_messages()
+    i.export_sender_stat_in_CSV(i.sum_sender_messages())
 
